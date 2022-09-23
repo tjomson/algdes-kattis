@@ -5,15 +5,19 @@ using System.Diagnostics;
 
 public class weightedintervalscheduling
 {
-    static Dictionary<int, int> cache = new Dictionary<int, int>();
+    // static Dictionary<int, int> cache = new Dictionary<int, int>();
+    static int?[] cache;
     static Interval[] intervals;
     static int n;
     public static void Main(string[] args)
     {
         n = int.Parse(Console.ReadLine());
+
         var stop = new Stopwatch();
         stop.Start();
+
         intervals = new Interval[n];
+        cache = new int?[n];
         for (int i = 0; i < n; i++)
         {
             var ints = Console.ReadLine().Split(' ');
@@ -23,33 +27,32 @@ public class weightedintervalscheduling
         Array.Sort(intervals, (a, b) => a.end - b.end);
 
         stop.Stop();
-        Console.WriteLine("Parse ms: " + stop.ElapsedMilliseconds);
+        // Console.WriteLine("Parse ms: " + stop.ElapsedMilliseconds);
         stop.Restart();
         var result = Solve(0);
         stop.Stop();
-        Console.WriteLine("calc ms: " + stop.ElapsedMilliseconds);
+        // Console.WriteLine("calc ms: " + stop.ElapsedMilliseconds);
         Console.WriteLine(result);
     }
 
-    public static int Solve(int i)
+    public static int Solve(int i, int acc)
     {
-        if (i == n) return 0;
-        if (cache.TryGetValue(i, out int val))
-        {
-            // Console.WriteLine("using cache");
-            return val;
-        }
+        if (i >= n) return 0;
+        if (cache[i] != null) return (int)cache[i];
+
         var curr = intervals[i];
 
         var skip = getSkipIndex(i);
+        // var include = (skip != i && skip < n) ? curr.weight + Solve(skip) : 0;
         var include = curr.weight + Solve(skip);
-        cache.TryAdd(skip, include);
+        // cache.TryAdd(skip, include);
 
         var exclude = Solve(i + 1);
-        cache.TryAdd(i + 1, exclude);
+        // cache.TryAdd(i + 1, exclude);
 
         var bestVal = Math.Max(include, exclude);
-        cache.TryAdd(i, bestVal);
+        // cache.TryAdd(i, bestVal);
+        cache[i] = bestVal;
         return bestVal;
     }
 
