@@ -35,7 +35,7 @@ public class weightedintervalscheduling
         Console.WriteLine(result);
     }
 
-    public static int Solve(int i, int acc)
+    public static int Solve(int i)
     {
         if (i >= n) return 0;
         if (cache[i] != null) return (int)cache[i];
