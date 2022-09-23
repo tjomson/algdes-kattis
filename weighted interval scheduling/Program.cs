@@ -16,7 +16,7 @@ public class weightedintervalscheduling
         intervals = new Interval[n];
         for (int i = 0; i < n; i++)
         {
-            var ints = Console.ReadLine().Split(" ");
+            var ints = Console.ReadLine().Split(' ');
             intervals[i] = new Interval(int.Parse(ints[0]), int.Parse(ints[1]), int.Parse(ints[2]));
         }
 
