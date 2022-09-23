@@ -1,33 +1,39 @@
 ﻿using System.Collections.Generic;
 using System;
 using System.Linq;
+using System.Diagnostics;
 
 public class weightedintervalscheduling
 {
     static Dictionary<int, int> cache = new Dictionary<int, int>();
     static Interval[] intervals;
+    static int n;
     public static void Main(string[] args)
     {
-        // var i1 = new Interval(1, 4, 0);
-        // var i2 = new Interval(0, 6, 0);
-        // Console.WriteLine(i1.overlaps(i2));
-        var n = int.Parse(Console.ReadLine());
+        n = int.Parse(Console.ReadLine());
+        var stop = new Stopwatch();
+        stop.Start();
         intervals = new Interval[n];
         for (int i = 0; i < n; i++)
         {
-            var ints = Console.ReadLine().Split(" ").Select(x => int.Parse(x)).ToList();
-            intervals[i] = new Interval(ints[0], ints[1], ints[2]);
+            var ints = Console.ReadLine().Split(" ");
+            intervals[i] = new Interval(int.Parse(ints[0]), int.Parse(ints[1]), int.Parse(ints[2]));
         }
 
-        intervals = intervals.OrderBy(x => x.end).ToArray();
+        Array.Sort(intervals, (a, b) => a.end - b.end);
 
+        stop.Stop();
+        Console.WriteLine("Parse ms: " + stop.ElapsedMilliseconds);
+        stop.Restart();
         var result = Solve(0);
+        stop.Stop();
+        Console.WriteLine("calc ms: " + stop.ElapsedMilliseconds);
         Console.WriteLine(result);
     }
 
     public static int Solve(int i)
     {
-        if (i == intervals.Count()) return 0;
+        if (i == n) return 0;
         if (cache.TryGetValue(i, out int val))
         {
             // Console.WriteLine("using cache");
@@ -51,8 +57,7 @@ public class weightedintervalscheduling
     {
         var curr = intervals[currIndex];
         currIndex++;
-        var count = intervals.Count();
-        while (currIndex < count)
+        while (currIndex < n)
         {
             if (!curr.overlapsForward(intervals[currIndex]))
             {
