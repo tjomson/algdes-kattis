@@ -14,6 +14,7 @@ public class canonicalcoinsystems
 
     public static bool IsCanonical(int coinIndex)
     {
-        if (coinIndex == 1) return true;
+        if (cache[coinIndex] != null) return (bool)cache[coinIndex];
+        
     }
 }
