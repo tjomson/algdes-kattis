@@ -5,67 +5,151 @@ public class waif
 {
     public static void Main(string[] args)
     {
-        var g = new Graph();
-        // g.AddToAdj(2, 3);
-        // g.AddToAdj(3, 5);
-        // g.AddToAdj(2, 4);
-        // Console.WriteLine(g);
+        var g = new CoolGraph();
         var items = ReadLine();
         var n = items.ElementAt(0); // Number of children
         var m = items.ElementAt(1); // Number of toys
         var p = items.ElementAt(2); // Number of toy categories
 
+        var startNode = 0;
+        var terminalNode = int.MaxValue;
+
         for (int i = 0; i < n; i++)
         {
             var lineParts = ReadLine();
             var childId = lineParts.ElementAt(0);
+            g.AddEdge(startNode, childId, 1);
             var toys = lineParts.Skip(1);
-            g.AddToAdj(childId, toys);
+            foreach (var toyId in toys)
+            {
+                g.AddEdge(childId, toyId, 1);
+            }
         }
 
         for (int i = 0; i < p; i++)
         {
             var lineParts = ReadLine();
-
+            var categoryId = lineParts.ElementAt(0);
+            var categoryLimit = lineParts.Last();
+            var toyIds = lineParts.Skip(1);
+            for (int j = 0; j < toyIds.Count() - 1; j++)
+            {
+                g.AddEdge(toyIds.ElementAt(j), categoryId, 1);
+            }
+            g.AddEdge(categoryId, terminalNode, categoryLimit);
         }
 
     }
 
     static List<int> ReadLine()
     {
-        return Console.ReadLine().Split(" ").Select(x => int.Parse(x)).ToList();
+        return Console.ReadLine().Split(" ").Select(int.Parse).ToList();
     }
 
-    class Graph
+    public class CoolGraph
     {
-        Dictionary<int, List<int>> adj = new();
-        new Dictionary<int, int> toyLimits = new();
+        Dictionary<int, List<Edge>> adj = new();
 
-        public void AddToAdj(int id, int item)
+        public int GetVertexCount()
         {
-            if (adj.TryGetValue(id, out var lst))
+            return adj.Count();
+        }
+
+        public void AddEdge(Edge edge)
+        {
+            if (adj.TryGetValue(edge.from, out var val))
             {
-                lst.Add(item);
+                var exists = val.Find(x => x.to == edge.to);
+                if (exists is null) val.Add(edge); // Don't allow dupe edges
             }
             else
             {
-                var newLst = new List<int>() { item };
-                adj.Add(id, newLst);
+                adj.Add(edge.from, new List<Edge>() { edge });
             }
+        }
+
+        public void AddEdge(int from, int to, int weight)
+        {
+            AddEdge(new Edge(from, to, weight));
+        }
+
+        public bool TryGetEdge(int from, int to, out Edge edge)
+        {
+            if (adj.TryGetValue(from, out var val))
+            {
+                var found = val.Find(x => x.to == to);
+                if (found is not null)
+                {
+                    edge = found;
+                    return true;
+                }
+            }
+            edge = null;
+            return false;
+        }
+
+        public List<Edge> GetVertexAdj(int id)
+        {
+            return adj[id];
+        }
+
+        public void IncreaseFlow(Edge edge, int amount)
+        {
+            if (edge.capacity > amount) edge.capacity -= amount;
+            else
+            {
+                var vertex = adj[edge.from];
+                vertex.Remove(edge);
+            }
+
+            if (TryGetReverseEdge(edge, out var reverse))
+            {
+                reverse.capacity += amount;
+            }
+            else
+            {
+                AddEdge(new Edge(edge.to, edge.from, amount));
+            }
+
+            // if (adj.TryGetValue(edge.to, out var val))
+            // {
+            //     var opposite = val.Find(x => x.to == edge.from);
+            //     if (opposite is not null)
+            //     {
+            //         opposite.capacity += amount;
+            //     }
+            // }
+        }
+
+        public void DecreaseFlow(Edge edge, int amount)
+        {
+            edge.capacity += amount;
+
+            if (TryGetReverseEdge(edge, out var reverse))
+            {
+                if (amount >= reverse.capacity) adj[edge.to].Remove(reverse);
+                else reverse.capacity -= amount;
+            }
+            // else
+            // {
+            //     AddEdge(new Edge(edge.to, edge.from, amount));
+            // }
 
         }
 
-        public void AddToAdj(int id, IEnumerable<int> items)
+        public bool TryGetReverseEdge(Edge edge, out Edge other)
         {
-            if (adj.TryGetValue(id, out var lst))
+            if (adj.TryGetValue(edge.to, out var val))
             {
-                lst.AddRange(items);
+                var found = val.Find(x => x.to == edge.from);
+                if (found is not null)
+                {
+                    other = found;
+                    return true;
+                }
             }
-            else
-            {
-                adj.Add(id, items.ToList());
-            }
-
+            other = null;
+            return false;
         }
 
         public override string ToString()
@@ -74,15 +158,26 @@ public class waif
 
             foreach (var (key, value) in adj)
             {
-                sb.Append(key + ": { ");
                 foreach (var entry in value)
                 {
-                    sb.Append(entry + " ");
+                    sb.Append($"{entry.from}=>{entry.to} ({entry.capacity})\n");
                 }
-                sb.Append("}\n");
             }
 
             return sb.ToString();
+        }
+    }
+
+    public class Edge
+    {
+        public int from;
+        public int to;
+        public int capacity;
+        public Edge(int from, int to, int capacity)
+        {
+            this.from = from;
+            this.to = to;
+            this.capacity = capacity;
         }
     }
 }
