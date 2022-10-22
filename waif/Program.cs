@@ -17,7 +17,7 @@ public class waif
         // g.AddEdge(0, 2, 1);
         // g.AddEdge(2, 3, 10);
         var g = Waif();
-        MaxFlow(g);
+        Console.WriteLine(MaxFlow(g, int.MaxValue));
     }
 
     static void DfsTest()
@@ -51,16 +51,16 @@ public class waif
         return g;
     }
 
-    static void MaxFlow(CoolGraph g)
+    static int MaxFlow(CoolGraph g, int terminal)
     {
-        var path = DFS(g, 0, g.GetMaxId());
+        var path = DFS(g, 0, terminal);
         while (path is not null)
         {
             g.Augment(path);
-            path = DFS(g, 0, g.GetMaxId());
+            path = DFS(g, 0, terminal);
         }
-        var maxFlow = g.GetVertexOutCapacity(g.GetMaxId());
-        Console.WriteLine(maxFlow);
+        var maxFlow = g.GetVertexOutCapacity(terminal);
+        return maxFlow;
     }
 
     static List<Edge>? DFS(CoolGraph graph, int start, int terminal)
@@ -134,6 +134,7 @@ public class waif
         var startNode = 0;
         var terminalNode = int.MaxValue;
 
+        var allToys = new HashSet<int>();
         for (int i = 0; i < n; i++)
         {
             var lineParts = ReadLine();
@@ -142,6 +143,7 @@ public class waif
             var toys = lineParts.Skip(1);
             foreach (var toyId in toys)
             {
+                allToys.Add(toyId);
                 g.AddEdge(childId, toyId, 1);
             }
         }
@@ -154,10 +156,17 @@ public class waif
             var toyIds = lineParts.Skip(1);
             for (int j = 0; j < toyIds.Count() - 1; j++)
             {
+                allToys.Remove(toyIds.ElementAt(j));
                 g.AddEdge(toyIds.ElementAt(j), categoryId, 1);
             }
             g.AddEdge(categoryId, terminalNode, categoryLimit);
         }
+
+        foreach (var toy in allToys) // Add toys not in category
+        {
+            g.AddEdge(toy, terminalNode, int.MaxValue);
+        }
+
         return g;
     }
 
