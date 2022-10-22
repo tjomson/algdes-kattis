@@ -38,20 +38,18 @@ public class waif
         Console.WriteLine(g);
     }
 
-    static List<int>? DFS(CoolGraph graph, int start, int terminal)
+    static List<Edge>? DFS(CoolGraph graph, int start, int terminal)
     {
         var marked = new bool[graph.GetVertexCount()];
 
-        List<int>? Loop(int vertex, List<int> path)
+        List<Edge>? Loop(int vertex, List<Edge> path)
         {
             marked[vertex] = true;
-            // count++;
             var adj = graph.GetVertexAdj(vertex);
             if (vertex == terminal) return path;
-            // if (adj.Count() == 0 || adj.TrueForAll(e => marked[e.to])) return null;
             foreach (var edge in adj)
             {
-                var newPath = new List<int>(path) { edge.to };
+                var newPath = new List<Edge>(path) { edge };
                 if (!marked[edge.to])
                 {
                     var found = Loop(edge.to, newPath);
@@ -62,7 +60,7 @@ public class waif
             return null;
         }
 
-        return Loop(start, new List<int>() { start }); ;
+        return Loop(start, new List<Edge>()); ;
     }
 
     // static List<int> DFS(CoolGraph graph)
@@ -250,7 +248,7 @@ public class waif
             {
                 foreach (var entry in value)
                 {
-                    sb.Append($"{entry.from}=>{entry.to} ({entry.capacity})\n");
+                    sb.Append($"{entry}\n");
                 }
             }
 
@@ -268,6 +266,11 @@ public class waif
             this.from = from;
             this.to = to;
             this.capacity = capacity;
+        }
+
+        public override string ToString()
+        {
+            return $"{this.from}=>{this.to} ({this.capacity})";
         }
     }
 }
