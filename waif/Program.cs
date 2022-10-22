@@ -5,6 +5,93 @@ public class waif
 {
     public static void Main(string[] args)
     {
+        Thore();
+    }
+
+    static void DfsTest()
+    {
+        var g = new CoolGraph();
+        g.AddEdge(0, 1, 1);
+        g.AddEdge(0, 2, 1);
+        g.AddEdge(1, 3, 1);
+        g.AddEdge(3, 4, 1);
+        var p = DFS(g, 0, 4);
+        p?.ForEach(Console.WriteLine);
+    }
+
+    static void Thore()
+    {
+        var n = int.Parse(Console.ReadLine()!);
+        for (int i = 0; i < n; i++) Console.ReadLine();
+
+
+        var m = int.Parse(Console.ReadLine()!);
+        var g = new CoolGraph();
+
+        for (int i = 0; i < m; i++)
+        {
+            var line = ReadLine();
+            var cap = line[2] == -1 ? int.MaxValue : line[2];
+            g.AddEdge(line[0], line[1], cap);
+            g.AddEdge(line[1], line[0], cap);
+        }
+        Console.WriteLine(g);
+    }
+
+    static List<int>? DFS(CoolGraph graph, int start, int terminal)
+    {
+        var marked = new bool[graph.GetVertexCount()];
+
+        List<int>? Loop(int vertex, List<int> path)
+        {
+            marked[vertex] = true;
+            // count++;
+            var adj = graph.GetVertexAdj(vertex);
+            if (vertex == terminal) return path;
+            // if (adj.Count() == 0 || adj.TrueForAll(e => marked[e.to])) return null;
+            foreach (var edge in adj)
+            {
+                var newPath = new List<int>(path) { edge.to };
+                if (!marked[edge.to])
+                {
+                    var found = Loop(edge.to, newPath);
+                    if (found is not null) return found;
+                }
+            }
+
+            return null;
+        }
+
+        return Loop(start, new List<int>() { start }); ;
+    }
+
+    // static List<int> DFS(CoolGraph graph)
+    // {
+    //     var marked = new bool[graph.GetVertexCount()];
+    //     // var count = 0;
+
+    //     Loop(0, new List<int>() { 0 });
+
+    //     List<int> Loop(int vertex, List<int> path)
+    //     {
+    //         marked[vertex] = true;
+    //         // count++;
+    //         var adj = graph.GetVertexAdj(vertex);
+    //         if (adj.Count() == 0 || adj.TrueForAll(e => marked[e.to])) return path;
+    //         foreach (var edge in adj)
+    //         {
+    //             var newPath = new List<int>(path) { edge.to };
+    //             if (!marked[edge.to]) return Loop(edge.to, newPath);
+    //         }
+
+    //         throw new Exception("wtf");
+    //     }
+
+    //     return Loop(0, new List<int>() { 0 }); ;
+    // }
+
+    static void Waif()
+    {
         var g = new CoolGraph();
         var items = ReadLine();
         var n = items.ElementAt(0); // Number of children
@@ -38,12 +125,11 @@ public class waif
             }
             g.AddEdge(categoryId, terminalNode, categoryLimit);
         }
-
     }
 
     static List<int> ReadLine()
     {
-        return Console.ReadLine().Split(" ").Select(int.Parse).ToList();
+        return Console.ReadLine()!.Split(" ").Select(int.Parse).ToList();
     }
 
     public class CoolGraph
@@ -66,6 +152,10 @@ public class waif
             {
                 adj.Add(edge.from, new List<Edge>() { edge });
             }
+            if (!adj.ContainsKey(edge.to))
+            {
+                adj.Add(edge.to, new List<Edge>());
+            }
         }
 
         public void AddEdge(int from, int to, int weight)
@@ -84,7 +174,7 @@ public class waif
                     return true;
                 }
             }
-            edge = null;
+            edge = new Edge(-1, -1, -1);
             return false;
         }
 
@@ -148,7 +238,7 @@ public class waif
                     return true;
                 }
             }
-            other = null;
+            other = new Edge(-1, -1, -1);
             return false;
         }
 
