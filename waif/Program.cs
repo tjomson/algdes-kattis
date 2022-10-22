@@ -5,7 +5,18 @@ public class waif
 {
     public static void Main(string[] args)
     {
-        Thore();
+        var g = new CoolGraph();
+        // for (int i = 0; i < 5; i++)
+        // {
+        //     var l = ReadLine();
+        //     g.AddEdge(l[0], l[1], l[2]);
+        // }
+        g.AddEdge(0, 1, 10);
+        g.AddEdge(1, 2, 1);
+        g.AddEdge(1, 3, 1);
+        g.AddEdge(0, 2, 1);
+        g.AddEdge(2, 3, 10);
+        MaxFlow(g);
     }
 
     static void DfsTest()
@@ -19,7 +30,7 @@ public class waif
         p?.ForEach(Console.WriteLine);
     }
 
-    static void Thore()
+    static CoolGraph Thore()
     {
         var n = int.Parse(Console.ReadLine()!);
         for (int i = 0; i < n; i++) Console.ReadLine();
@@ -36,6 +47,19 @@ public class waif
             g.AddEdge(line[1], line[0], cap);
         }
         Console.WriteLine(g);
+        return g;
+    }
+
+    static void MaxFlow(CoolGraph g)
+    {
+        var path = DFS(g, 0, g.GetMaxId());
+        while (path is not null)
+        {
+            g.Augment(path);
+            path = DFS(g, 0, g.GetMaxId());
+        }
+        var maxFlow = g.GetVertexOutCapacity(g.GetMaxId());
+        Console.WriteLine(maxFlow);
     }
 
     static List<Edge>? DFS(CoolGraph graph, int start, int terminal)
@@ -45,7 +69,7 @@ public class waif
         List<Edge>? Loop(int vertex, List<Edge> path)
         {
             marked[vertex] = true;
-            var adj = graph.GetVertexAdj(vertex);
+            var adj = graph.GetVertexAdj(vertex).Where(x => x.capacity > 0);
             if (vertex == terminal) return path;
             foreach (var edge in adj)
             {
@@ -62,6 +86,16 @@ public class waif
 
         return Loop(start, new List<Edge>()); ;
     }
+
+    // static Edge GetBottleneck(List<Edge> path)
+    // {
+    //     Edge minEdge = new Edge(-1, -1, int.MaxValue);
+    //     foreach (var edge in path)
+    //     {
+    //         if (edge.capacity < minEdge.capacity) minEdge = edge;
+    //     }
+    //     return minEdge;
+    // }
 
     // static List<int> DFS(CoolGraph graph)
     // {
@@ -139,6 +173,22 @@ public class waif
             return adj.Count();
         }
 
+        public int GetMaxId()
+        {
+            return adj.Max(x => x.Key);
+        }
+
+        public int GetVertexOutCapacity(int vertex)
+        {
+            var v = adj[vertex];
+            var count = 0;
+            foreach (var edge in v)
+            {
+                count += edge.capacity;
+            }
+            return count;
+        }
+
         public void AddEdge(Edge edge)
         {
             if (adj.TryGetValue(edge.from, out var val))
@@ -150,9 +200,14 @@ public class waif
             {
                 adj.Add(edge.from, new List<Edge>() { edge });
             }
+
             if (!adj.ContainsKey(edge.to))
             {
-                adj.Add(edge.to, new List<Edge>());
+                adj.Add(edge.to, new List<Edge>() { new Edge(edge.to, edge.from, 0) });
+            }
+            else
+            {
+                adj[edge.to].Add(new Edge(edge.to, edge.from, 0)); // Add zero capacity opposite edge
             }
         }
 
@@ -181,14 +236,31 @@ public class waif
             return adj[id];
         }
 
+        public void Augment(List<Edge> path)
+        {
+            var bottleneck = path.Min(x => x.capacity);
+
+            foreach (var edge in path)
+            {
+                this.IncreaseFlow(edge.from, edge.to, bottleneck);
+            }
+        }
+
+        public void IncreaseFlow(int from, int to, int amount)
+        {
+            var e = adj[from].Where(x => x.to == to).FirstOrDefault();
+            IncreaseFlow(e!, amount);
+        }
+
         public void IncreaseFlow(Edge edge, int amount)
         {
-            if (edge.capacity > amount) edge.capacity -= amount;
-            else
-            {
-                var vertex = adj[edge.from];
-                vertex.Remove(edge);
-            }
+            // if (edge.capacity > amount) edge.capacity -= amount;
+            // else
+            // {
+            //     var vertex = adj[edge.from];
+            //     vertex.Remove(edge);
+            // }
+            edge.capacity -= amount;
 
             if (TryGetReverseEdge(edge, out var reverse))
             {
