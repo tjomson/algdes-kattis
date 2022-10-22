@@ -1,5 +1,7 @@
 ﻿using System.Text;
 using System.Linq;
+using System;
+using System.Collections.Generic;
 
 public class waif
 {
@@ -33,11 +35,11 @@ public class waif
 
     static CoolGraph Thore()
     {
-        var n = int.Parse(Console.ReadLine()!);
+        var n = int.Parse(Console.ReadLine());
         for (int i = 0; i < n; i++) Console.ReadLine();
 
 
-        var m = int.Parse(Console.ReadLine()!);
+        var m = int.Parse(Console.ReadLine());
         var g = new CoolGraph();
 
         for (int i = 0; i < m; i++)
@@ -54,7 +56,7 @@ public class waif
     static int MaxFlow(CoolGraph g, int terminal)
     {
         var path = DFS(g, 0, terminal);
-        while (path is not null)
+        while (path != null)
         {
             g.Augment(path);
             path = DFS(g, 0, terminal);
@@ -63,29 +65,29 @@ public class waif
         return maxFlow;
     }
 
-    static List<Edge>? DFS(CoolGraph graph, int start, int terminal)
+    static List<Edge> Loop(int vertex, List<Edge> path, HashSet<int> marked, CoolGraph graph, int terminal)
+    {
+        marked.Add(vertex);
+        var adj = graph.GetVertexAdj(vertex).Where(x => x.capacity > 0);
+        if (vertex == terminal) return path;
+        foreach (var edge in adj)
+        {
+            var newPath = new List<Edge>(path) { edge };
+            if (!marked.Contains(edge.to))
+            {
+                var found = Loop(edge.to, newPath, marked, graph, terminal);
+                if (found != null) return found;
+            }
+        }
+
+        return null;
+    }
+
+    static List<Edge> DFS(CoolGraph graph, int start, int terminal)
     {
         var marked = new HashSet<int>();
 
-        List<Edge>? Loop(int vertex, List<Edge> path)
-        {
-            marked.Add(vertex);
-            var adj = graph.GetVertexAdj(vertex).Where(x => x.capacity > 0);
-            if (vertex == terminal) return path;
-            foreach (var edge in adj)
-            {
-                var newPath = new List<Edge>(path) { edge };
-                if (!marked.Contains(edge.to))
-                {
-                    var found = Loop(edge.to, newPath);
-                    if (found is not null) return found;
-                }
-            }
-
-            return null;
-        }
-
-        return Loop(start, new List<Edge>()); ;
+        return Loop(start, new List<Edge>(), marked, graph, terminal);
     }
 
     // static Edge GetBottleneck(List<Edge> path)
@@ -123,7 +125,7 @@ public class waif
     //     return Loop(0, new List<int>() { 0 }); ;
     // }
 
-    static CoolGraph Waif()
+    public static CoolGraph Waif()
     {
         var g = new CoolGraph();
         var items = ReadLine();
@@ -172,12 +174,12 @@ public class waif
 
     static List<int> ReadLine()
     {
-        return Console.ReadLine()!.Split(" ").Select(int.Parse).ToList();
+        return Console.ReadLine().Split(" ").Select(int.Parse).ToList();
     }
 
     public class CoolGraph
     {
-        Dictionary<int, List<Edge>> adj = new();
+        Dictionary<int, List<Edge>> adj = new Dictionary<int, List<Edge>>();
 
         public int GetVertexCount()
         {
@@ -205,7 +207,7 @@ public class waif
             if (adj.TryGetValue(edge.from, out var val))
             {
                 var exists = val.Find(x => x.to == edge.to);
-                if (exists is null) val.Add(edge); // Don't allow dupe edges
+                if (exists == null) val.Add(edge); // Don't allow dupe edges
             }
             else
             {
@@ -232,7 +234,7 @@ public class waif
             if (adj.TryGetValue(from, out var val))
             {
                 var found = val.Find(x => x.to == to);
-                if (found is not null)
+                if (found != null)
                 {
                     edge = found;
                     return true;
@@ -260,7 +262,7 @@ public class waif
         public void IncreaseFlow(int from, int to, int amount)
         {
             var e = adj[from].Where(x => x.to == to).FirstOrDefault();
-            IncreaseFlow(e!, amount);
+            IncreaseFlow(e, amount);
         }
 
         public void IncreaseFlow(Edge edge, int amount)
@@ -313,7 +315,7 @@ public class waif
             if (adj.TryGetValue(edge.to, out var val))
             {
                 var found = val.Find(x => x.to == edge.from);
-                if (found is not null)
+                if (found != null)
                 {
                     other = found;
                     return true;
@@ -327,9 +329,9 @@ public class waif
         {
             var sb = new StringBuilder();
 
-            foreach (var (key, value) in adj)
+            foreach (var keyvalue in adj)
             {
-                foreach (var entry in value)
+                foreach (var entry in keyvalue.Value)
                 {
                     sb.Append($"{entry}\n");
                 }
