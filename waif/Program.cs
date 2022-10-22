@@ -7,19 +7,20 @@ public class waif
 {
     public static void Main(string[] args)
     {
-        // var g = new CoolGraph();
+        var g = new CoolGraph();
         // // for (int i = 0; i < 5; i++)
         // // {
         // //     var l = ReadLine();
         // //     g.AddEdge(l[0], l[1], l[2]);
         // // }
-        // g.AddEdge(0, 1, 10);
-        // g.AddEdge(1, 2, 1);
-        // g.AddEdge(1, 3, 1);
-        // g.AddEdge(0, 2, 1);
-        // g.AddEdge(2, 3, 10);
-        var g = Waif();
-        Console.WriteLine(MaxFlow(g, int.MaxValue));
+        g.AddEdge(0, 1, 10);
+        g.AddEdge(1, 2, 1);
+        g.AddEdge(1, 3, 1);
+        g.AddEdge(0, 2, 1);
+        g.AddEdge(2, 3, 10);
+        // var g = Waif();
+        // var g = Thore();
+        Console.WriteLine(MaxFlow(g, g.GetMaxId()));
     }
 
     static void DfsTest()
@@ -47,7 +48,6 @@ public class waif
             var line = ReadLine();
             var cap = line[2] == -1 ? int.MaxValue : line[2];
             g.AddEdge(line[0], line[1], cap);
-            g.AddEdge(line[1], line[0], cap);
         }
         Console.WriteLine(g);
         return g;
@@ -67,15 +67,15 @@ public class waif
 
     static List<Edge> Loop(int vertex, List<Edge> path, HashSet<int> marked, CoolGraph graph, int terminal)
     {
-        marked.Add(vertex);
         var adj = graph.GetVertexAdj(vertex).Where(x => x.capacity > 0);
         if (vertex == terminal) return path;
         foreach (var edge in adj)
         {
-            var newPath = new List<Edge>(path) { edge };
             if (!marked.Contains(edge.to))
             {
-                var found = Loop(edge.to, newPath, marked, graph, terminal);
+                var newPath = new List<Edge>(path) { edge };
+                var newMarked = new HashSet<int>(marked) { vertex };
+                var found = Loop(edge.to, newPath, newMarked, graph, terminal);
                 if (found != null) return found;
             }
         }
@@ -89,41 +89,6 @@ public class waif
 
         return Loop(start, new List<Edge>(), marked, graph, terminal);
     }
-
-    // static Edge GetBottleneck(List<Edge> path)
-    // {
-    //     Edge minEdge = new Edge(-1, -1, int.MaxValue);
-    //     foreach (var edge in path)
-    //     {
-    //         if (edge.capacity < minEdge.capacity) minEdge = edge;
-    //     }
-    //     return minEdge;
-    // }
-
-    // static List<int> DFS(CoolGraph graph)
-    // {
-    //     var marked = new bool[graph.GetVertexCount()];
-    //     // var count = 0;
-
-    //     Loop(0, new List<int>() { 0 });
-
-    //     List<int> Loop(int vertex, List<int> path)
-    //     {
-    //         marked[vertex] = true;
-    //         // count++;
-    //         var adj = graph.GetVertexAdj(vertex);
-    //         if (adj.Count() == 0 || adj.TrueForAll(e => marked[e.to])) return path;
-    //         foreach (var edge in adj)
-    //         {
-    //             var newPath = new List<int>(path) { edge.to };
-    //             if (!marked[edge.to]) return Loop(edge.to, newPath);
-    //         }
-
-    //         throw new Exception("wtf");
-    //     }
-
-    //     return Loop(0, new List<int>() { 0 }); ;
-    // }
 
     public static CoolGraph Waif()
     {
@@ -267,12 +232,6 @@ public class waif
 
         public void IncreaseFlow(Edge edge, int amount)
         {
-            // if (edge.capacity > amount) edge.capacity -= amount;
-            // else
-            // {
-            //     var vertex = adj[edge.from];
-            //     vertex.Remove(edge);
-            // }
             edge.capacity -= amount;
 
             if (TryGetReverseEdge(edge, out var reverse))
@@ -283,15 +242,6 @@ public class waif
             {
                 AddEdge(new Edge(edge.to, edge.from, amount));
             }
-
-            // if (adj.TryGetValue(edge.to, out var val))
-            // {
-            //     var opposite = val.Find(x => x.to == edge.from);
-            //     if (opposite is not null)
-            //     {
-            //         opposite.capacity += amount;
-            //     }
-            // }
         }
 
         public void DecreaseFlow(Edge edge, int amount)
@@ -303,11 +253,6 @@ public class waif
                 if (amount >= reverse.capacity) adj[edge.to].Remove(reverse);
                 else reverse.capacity -= amount;
             }
-            // else
-            // {
-            //     AddEdge(new Edge(edge.to, edge.from, amount));
-            // }
-
         }
 
         public bool TryGetReverseEdge(Edge edge, out Edge other)
