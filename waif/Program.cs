@@ -5,17 +5,18 @@ public class waif
 {
     public static void Main(string[] args)
     {
-        var g = new CoolGraph();
-        // for (int i = 0; i < 5; i++)
-        // {
-        //     var l = ReadLine();
-        //     g.AddEdge(l[0], l[1], l[2]);
-        // }
-        g.AddEdge(0, 1, 10);
-        g.AddEdge(1, 2, 1);
-        g.AddEdge(1, 3, 1);
-        g.AddEdge(0, 2, 1);
-        g.AddEdge(2, 3, 10);
+        // var g = new CoolGraph();
+        // // for (int i = 0; i < 5; i++)
+        // // {
+        // //     var l = ReadLine();
+        // //     g.AddEdge(l[0], l[1], l[2]);
+        // // }
+        // g.AddEdge(0, 1, 10);
+        // g.AddEdge(1, 2, 1);
+        // g.AddEdge(1, 3, 1);
+        // g.AddEdge(0, 2, 1);
+        // g.AddEdge(2, 3, 10);
+        var g = Waif();
         MaxFlow(g);
     }
 
@@ -64,17 +65,17 @@ public class waif
 
     static List<Edge>? DFS(CoolGraph graph, int start, int terminal)
     {
-        var marked = new bool[graph.GetVertexCount()];
+        var marked = new HashSet<int>();
 
         List<Edge>? Loop(int vertex, List<Edge> path)
         {
-            marked[vertex] = true;
+            marked.Add(vertex);
             var adj = graph.GetVertexAdj(vertex).Where(x => x.capacity > 0);
             if (vertex == terminal) return path;
             foreach (var edge in adj)
             {
                 var newPath = new List<Edge>(path) { edge };
-                if (!marked[edge.to])
+                if (!marked.Contains(edge.to))
                 {
                     var found = Loop(edge.to, newPath);
                     if (found is not null) return found;
@@ -122,7 +123,7 @@ public class waif
     //     return Loop(0, new List<int>() { 0 }); ;
     // }
 
-    static void Waif()
+    static CoolGraph Waif()
     {
         var g = new CoolGraph();
         var items = ReadLine();
@@ -157,6 +158,7 @@ public class waif
             }
             g.AddEdge(categoryId, terminalNode, categoryLimit);
         }
+        return g;
     }
 
     static List<int> ReadLine()
