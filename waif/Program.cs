@@ -8,8 +8,8 @@ public class waif
 {
     public static void Main(string[] args)
     {
-        // var g = Waif();
-        var g = Thore();
+        var g = Waif();
+        // var g = Thore();
         // var path = BFS(g, 0, g.GetMaxId());
         // path.ForEach(Console.WriteLine);
         Console.WriteLine(MaxFlow(g, g.GetMaxId()));
@@ -30,6 +30,7 @@ public class waif
             var line = ReadLine();
             var cap = line[2] == -1 ? int.MaxValue : line[2];
             g.AddEdge(line[0], line[1], cap);
+            g.AddEdge(line[1], line[0], cap);
         }
         return g;
     }
@@ -71,6 +72,20 @@ public class waif
         return Loop(start, new List<Edge>(), marked, graph, terminal);
     }
 
+    static List<Edge> ConstructPath(int start, int terminal, Dictionary<int, Edge> edgeTo)
+    {
+        var curr = terminal;
+        Stack<Edge> x = new Stack<Edge>();
+        var path = new List<Edge>();
+        while (curr != start)
+        {
+            path.Add(edgeTo[curr]);
+            curr = edgeTo[curr].from;
+        }
+        path.Reverse();
+        return path;
+    }
+
     static List<Edge> BFS(CoolGraph graph, int start, int terminal)
     {
         var marked = new HashSet<int>();
@@ -78,20 +93,6 @@ public class waif
         var edgeTo = new Dictionary<int, Edge>();
         marked.Add(start);
         queue.Enqueue(start);
-
-        List<Edge> ConstructPath()
-        {
-            var curr = terminal;
-            Stack<Edge> x = new Stack<Edge>();
-            var path = new List<Edge>();
-            while (curr != start)
-            {
-                path.Add(edgeTo[curr]);
-                curr = edgeTo[curr].from;
-            }
-            path.Reverse();
-            return path;
-        }
 
         while (queue.Count() != 0)
         {
@@ -103,7 +104,7 @@ public class waif
                     marked.Add(edge.to);
                     queue.Enqueue(edge.to);
                     edgeTo[edge.to] = edge;
-                    if (edge.to == terminal) return ConstructPath();
+                    if (edge.to == terminal) return ConstructPath(start, terminal, edgeTo);
                 }
             }
         }
@@ -122,36 +123,34 @@ public class waif
         var terminalNode = int.MaxValue;
 
         var allToys = new HashSet<int>();
-        for (int i = 0; i < n; i++)
+        for (int i = 1; i <= n; i++)
         {
             var lineParts = ReadLine();
-            var childId = lineParts.ElementAt(0);
-            g.AddEdge(startNode, childId, 1);
+            g.AddEdge(startNode, i, 1);
             var toys = lineParts.Skip(1);
             foreach (var toyId in toys)
             {
                 allToys.Add(toyId);
-                g.AddEdge(childId, toyId, 1);
+                g.AddEdge(i, toyId, 1);
             }
         }
 
-        for (int i = 0; i < p; i++)
+        for (int i = n + 1; i <= p + n; i++)
         {
             var lineParts = ReadLine();
-            var categoryId = lineParts.ElementAt(0);
             var categoryLimit = lineParts.Last();
             var toyIds = lineParts.Skip(1);
             for (int j = 0; j < toyIds.Count() - 1; j++)
             {
                 allToys.Remove(toyIds.ElementAt(j));
-                g.AddEdge(toyIds.ElementAt(j), categoryId, 1);
+                g.AddEdge(toyIds.ElementAt(j), i, 1);
             }
-            g.AddEdge(categoryId, terminalNode, categoryLimit);
+            g.AddEdge(i, terminalNode, categoryLimit);
         }
 
         foreach (var toy in allToys) // Add toys not in category
         {
-            g.AddEdge(toy, terminalNode, int.MaxValue);
+            g.AddEdge(toy, terminalNode, 1);
         }
 
         return g;
@@ -192,7 +191,8 @@ public class waif
             if (adj.TryGetValue(edge.from, out var val))
             {
                 var exists = val.Find(x => x.to == edge.to);
-                if (exists == null) val.Add(edge); // Don't allow dupe edges
+                if (exists == null) val.Add(edge);
+                else exists.capacity = edge.capacity; // If same edge is added, overwrite capacity
             }
             else
             {
