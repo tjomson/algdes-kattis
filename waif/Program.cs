@@ -8,11 +8,14 @@ public class waif
 {
     public static void Main(string[] args)
     {
-        var g = Waif();
-        // var g = Thore();
+        // var g = Waif();
+        var g = Thore();
         // var path = BFS(g, 0, g.GetMaxId());
         // path.ForEach(Console.WriteLine);
+        var originalGraph = new CoolGraph(new Dictionary<int, List<Edge>>(g.adj));
         Console.WriteLine(MaxFlow(g, g.GetMaxId()));
+        var marked = FindMarked(g, 0, g.GetMaxId());
+        Console.WriteLine(GetMinCutCapacity(originalGraph, marked) / 2); // Divide by two because there is added capacity in both directions
         // Console.WriteLine(g);
     }
 
@@ -33,6 +36,19 @@ public class waif
             g.AddEdge(line[1], line[0], cap);
         }
         return g;
+    }
+
+    static int GetMinCutCapacity(CoolGraph originalGraph, HashSet<int> marked)
+    {
+        var count = 0;
+        foreach (var vertex in originalGraph.adj)
+        {
+            foreach (var edge in vertex.Value)
+            {
+                if (marked.Contains(edge.to) && !marked.Contains(edge.from)) count += edge.capacity;
+            }
+        }
+        return count;
     }
 
     static int MaxFlow(CoolGraph g, int terminal)
@@ -111,6 +127,28 @@ public class waif
         return null;
     }
 
+    static HashSet<int> FindMarked(CoolGraph graph, int start, int terminal)
+    {
+        var marked = new HashSet<int>();
+        Queue<int> queue = new Queue<int>();
+        marked.Add(start);
+        queue.Enqueue(start);
+
+        while (queue.Count() != 0)
+        {
+            int v = queue.Dequeue();
+            foreach (var edge in graph.GetVertexAdj(v))
+            {
+                if (!marked.Contains(edge.to) && edge.capacity > 0)
+                {
+                    marked.Add(edge.to);
+                    queue.Enqueue(edge.to);
+                }
+            }
+        }
+        return marked;
+    }
+
     public static CoolGraph Waif()
     {
         var g = new CoolGraph();
@@ -163,7 +201,13 @@ public class waif
 
     public class CoolGraph
     {
-        Dictionary<int, List<Edge>> adj = new Dictionary<int, List<Edge>>();
+        public Dictionary<int, List<Edge>> adj = new Dictionary<int, List<Edge>>();
+        public CoolGraph() { }
+
+        public CoolGraph(Dictionary<int, List<Edge>> adj)
+        {
+            this.adj = adj;
+        }
 
         public int GetVertexCount()
         {
