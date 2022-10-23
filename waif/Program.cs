@@ -7,31 +7,9 @@ public class waif
 {
     public static void Main(string[] args)
     {
-        var g = new CoolGraph();
-        // // for (int i = 0; i < 5; i++)
-        // // {
-        // //     var l = ReadLine();
-        // //     g.AddEdge(l[0], l[1], l[2]);
-        // // }
-        g.AddEdge(0, 1, 10);
-        g.AddEdge(1, 2, 1);
-        g.AddEdge(1, 3, 1);
-        g.AddEdge(0, 2, 1);
-        g.AddEdge(2, 3, 10);
         // var g = Waif();
-        // var g = Thore();
+        var g = Thore();
         Console.WriteLine(MaxFlow(g, g.GetMaxId()));
-    }
-
-    static void DfsTest()
-    {
-        var g = new CoolGraph();
-        g.AddEdge(0, 1, 1);
-        g.AddEdge(0, 2, 1);
-        g.AddEdge(1, 3, 1);
-        g.AddEdge(3, 4, 1);
-        var p = DFS(g, 0, 4);
-        p?.ForEach(Console.WriteLine);
     }
 
     static CoolGraph Thore()
@@ -49,7 +27,6 @@ public class waif
             var cap = line[2] == -1 ? int.MaxValue : line[2];
             g.AddEdge(line[0], line[1], cap);
         }
-        Console.WriteLine(g);
         return g;
     }
 
