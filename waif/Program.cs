@@ -2,6 +2,7 @@
 using System.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 public class waif
 {
@@ -9,7 +10,10 @@ public class waif
     {
         // var g = Waif();
         var g = Thore();
+        // var path = BFS(g, 0, g.GetMaxId());
+        // path.ForEach(Console.WriteLine);
         Console.WriteLine(MaxFlow(g, g.GetMaxId()));
+        // Console.WriteLine(g);
     }
 
     static CoolGraph Thore()
@@ -32,11 +36,11 @@ public class waif
 
     static int MaxFlow(CoolGraph g, int terminal)
     {
-        var path = DFS(g, 0, terminal);
+        var path = BFS(g, 0, terminal);
         while (path != null)
         {
             g.Augment(path);
-            path = DFS(g, 0, terminal);
+            path = BFS(g, 0, terminal);
         }
         var maxFlow = g.GetVertexOutCapacity(terminal);
         return maxFlow;
@@ -65,6 +69,45 @@ public class waif
         var marked = new HashSet<int>();
 
         return Loop(start, new List<Edge>(), marked, graph, terminal);
+    }
+
+    static List<Edge> BFS(CoolGraph graph, int start, int terminal)
+    {
+        var marked = new HashSet<int>();
+        Queue<int> queue = new Queue<int>();
+        var edgeTo = new Dictionary<int, Edge>();
+        marked.Add(start);
+        queue.Enqueue(start);
+
+        List<Edge> ConstructPath()
+        {
+            var curr = terminal;
+            Stack<Edge> x = new Stack<Edge>();
+            var path = new List<Edge>();
+            while (curr != start)
+            {
+                path.Add(edgeTo[curr]);
+                curr = edgeTo[curr].from;
+            }
+            path.Reverse();
+            return path;
+        }
+
+        while (queue.Count() != 0)
+        {
+            int v = queue.Dequeue();
+            foreach (var edge in graph.GetVertexAdj(v))
+            {
+                if (!marked.Contains(edge.to) && edge.capacity > 0)
+                {
+                    marked.Add(edge.to);
+                    queue.Enqueue(edge.to);
+                    edgeTo[edge.to] = edge;
+                    if (edge.to == terminal) return ConstructPath();
+                }
+            }
+        }
+        return null;
     }
 
     public static CoolGraph Waif()
@@ -194,7 +237,6 @@ public class waif
         public void Augment(List<Edge> path)
         {
             var bottleneck = path.Min(x => x.capacity);
-
             foreach (var edge in path)
             {
                 this.IncreaseFlow(edge.from, edge.to, bottleneck);
