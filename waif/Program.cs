@@ -6,17 +6,48 @@ using System.Diagnostics;
 
 public class waif
 {
+    static int n;
     public static void Main(string[] args)
     {
-        // var g = Waif();
-        var g = Thore();
+        var g = Waif();
+        // var g = Thore();
         // var path = BFS(g, 0, g.GetMaxId());
         // path.ForEach(Console.WriteLine);
         var originalGraph = new CoolGraph(new Dictionary<int, List<Edge>>(g.adj));
-        Console.WriteLine(MaxFlow(g, g.GetMaxId()));
+        // Console.WriteLine(MaxFlow(g, g.GetMaxId()));
+        MaxFlow(g, g.GetMaxId());
         var marked = FindMarked(g, 0, g.GetMaxId());
-        Console.WriteLine(GetMinCutCapacity(originalGraph, marked) / 2); // Divide by two because there is added capacity in both directions
+        // foreach (var x in marked) Console.WriteLine(x);
         // Console.WriteLine(g);
+        Console.WriteLine(GetMinCutCapacity(originalGraph, marked));
+        // Console.WriteLine(GetMinCutCapacity(originalGraph, marked) / 2); // Divide by two because there is added capacity in both directions
+        // Console.WriteLine(g);
+
+
+    }
+
+    static void RunPaintball()
+    {
+        var g = Paintball();
+        var originalGraph = new CoolGraph(new Dictionary<int, List<Edge>>(g.adj));
+        MaxFlow(g, g.GetMaxId());
+        var marked = FindMarked(g, 0, g.GetMaxId());
+        var cap = GetMinCutCapacity(g, marked);
+        var cut = GetMinCut(g, marked);
+        // cut.ForEach(Console.WriteLine);
+        // Console.WriteLine(g);
+        var whoShootsWho = new Dictionary<int, int>();
+        if (cap != n) Console.WriteLine("Impossible");
+        else
+        {
+            for (int i = 1; i <= n; i++)
+            {
+                var vertex = g.GetVertexAdj(10000 + i);
+                var e = vertex.Find(x => x.capacity > 0 && x.to < 10000);
+                whoShootsWho.Add(e.to, i);
+            }
+            whoShootsWho.ToList().OrderBy(x => x.Key).ToList().ForEach(x => Console.WriteLine(x.Value));
+        }
     }
 
     static CoolGraph Thore()
@@ -32,8 +63,8 @@ public class waif
         {
             var line = ReadLine();
             var cap = line[2] == -1 ? int.MaxValue : line[2];
-            g.AddEdge(line[0], line[1], cap);
-            g.AddEdge(line[1], line[0], cap);
+            g.AddEdge(line[0], line[1], cap, true);
+            // g.AddEdge(line[1], line[0], cap, true);
         }
         return g;
     }
@@ -45,10 +76,23 @@ public class waif
         {
             foreach (var edge in vertex.Value)
             {
-                if (marked.Contains(edge.to) && !marked.Contains(edge.from)) count += edge.capacity;
+                if (marked.Contains(edge.to) && !marked.Contains(edge.from) && !edge.isOriginal) count += edge.capacity;
             }
         }
         return count;
+    }
+
+    static List<Edge> GetMinCut(CoolGraph originalGraph, HashSet<int> marked)
+    {
+        var lst = new List<Edge>();
+        foreach (var vertex in originalGraph.adj)
+        {
+            foreach (var edge in vertex.Value)
+            {
+                if (marked.Contains(edge.to) && !marked.Contains(edge.from) && !edge.isOriginal) lst.Add(edge);
+            }
+        }
+        return lst;
     }
 
     static int MaxFlow(CoolGraph g, int terminal)
@@ -149,6 +193,37 @@ public class waif
         return marked;
     }
 
+    public static CoolGraph Paintball()
+    {
+        var g = new CoolGraph();
+        var items = ReadLine();
+        n = items[0]; // num players
+        var m = items[1];
+        var offset = 10000;
+
+        var start = 0;
+        var terminal = int.MaxValue;
+
+        for (int i = 0; i < m; i++)
+        {
+            var line = ReadLine();
+            g.AddEdge(line[0], line[1] + offset, 1);
+            g.AddEdge(line[1], line[0] + offset, 1);
+        }
+
+        for (int i = 1; i <= n; i++) // Connect players to source
+        {
+            g.AddEdge(start, i, 1);
+        }
+
+        for (int i = 1; i <= n; i++) // Connect players to terminal
+        {
+            g.AddEdge(i + offset, terminal, 1);
+        }
+
+        return g;
+    }
+
     public static CoolGraph Waif()
     {
         var g = new CoolGraph();
@@ -168,8 +243,8 @@ public class waif
             var toys = lineParts.Skip(1);
             foreach (var toyId in toys)
             {
-                allToys.Add(toyId);
-                g.AddEdge(i, toyId, 1);
+                allToys.Add(toyId + 10000);
+                g.AddEdge(i, toyId + 10000, 1);
             }
         }
 
@@ -180,7 +255,7 @@ public class waif
             var toyIds = lineParts.Skip(1);
             for (int j = 0; j < toyIds.Count() - 1; j++)
             {
-                allToys.Remove(toyIds.ElementAt(j));
+                allToys.Remove(toyIds.ElementAt(j) + 10000);
                 g.AddEdge(toyIds.ElementAt(j), i, 1);
             }
             g.AddEdge(i, terminalNode, categoryLimit);
@@ -236,7 +311,11 @@ public class waif
             {
                 var exists = val.Find(x => x.to == edge.to);
                 if (exists == null) val.Add(edge);
-                else exists.capacity = edge.capacity; // If same edge is added, overwrite capacity
+                else
+                {
+                    exists.capacity = edge.capacity; // If same edge is added, overwrite capacity
+                    exists.isOriginal = edge.isOriginal;
+                }
             }
             else
             {
@@ -253,9 +332,9 @@ public class waif
             }
         }
 
-        public void AddEdge(int from, int to, int weight)
+        public void AddEdge(int from, int to, int weight, bool isOriginal = false)
         {
-            AddEdge(new Edge(from, to, weight));
+            AddEdge(new Edge(from, to, weight, isOriginal));
         }
 
         public bool TryGetEdge(int from, int to, out Edge edge)
@@ -354,11 +433,13 @@ public class waif
         public int from;
         public int to;
         public int capacity;
-        public Edge(int from, int to, int capacity)
+        public bool isOriginal;
+        public Edge(int from, int to, int capacity, bool isOriginal = false)
         {
             this.from = from;
             this.to = to;
             this.capacity = capacity;
+            this.isOriginal = isOriginal;
         }
 
         public override string ToString()
