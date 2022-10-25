@@ -15,6 +15,8 @@ public class waif
         // path.ForEach(Console.WriteLine);
         var originalGraph = new CoolGraph(new Dictionary<int, List<Edge>>(g.adj));
         // Console.WriteLine(MaxFlow(g, g.GetMaxId()));
+        // Console.WriteLine(MaxFlow(g, g.GetMaxId()));
+        // Console.WriteLine(g);
         MaxFlow(g, g.GetMaxId());
         var marked = FindMarked(g, 0, g.GetMaxId());
         // foreach (var x in marked) Console.WriteLine(x);
@@ -243,22 +245,22 @@ public class waif
             var toys = lineParts.Skip(1);
             foreach (var toyId in toys)
             {
-                allToys.Add(toyId + 10000);
-                g.AddEdge(i, toyId + 10000, 1);
+                allToys.Add(toyId + 200000);
+                g.AddEdge(i, toyId + 200000, 1);
             }
         }
 
-        for (int i = n + 1; i <= p + n; i++)
+        for (int i = 1; i <= p; i++)
         {
             var lineParts = ReadLine();
             var categoryLimit = lineParts.Last();
             var toyIds = lineParts.Skip(1);
             for (int j = 0; j < toyIds.Count() - 1; j++)
             {
-                allToys.Remove(toyIds.ElementAt(j) + 10000);
-                g.AddEdge(toyIds.ElementAt(j), i, 1);
+                allToys.Remove(toyIds.ElementAt(j) + 200000);
+                g.AddEdge(toyIds.ElementAt(j) + 200000, i + 10000, 1);
             }
-            g.AddEdge(i, terminalNode, categoryLimit);
+            g.AddEdge(i + 10000, terminalNode, categoryLimit);
         }
 
         foreach (var toy in allToys) // Add toys not in category
