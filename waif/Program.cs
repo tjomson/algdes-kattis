@@ -9,23 +9,38 @@ public class waif
     static int n;
     public static void Main(string[] args)
     {
-        var g = Waif();
+        RunThore();
+        // var g = Waif();
         // var g = Thore();
         // var path = BFS(g, 0, g.GetMaxId());
         // path.ForEach(Console.WriteLine);
-        var originalGraph = new CoolGraph(new Dictionary<int, List<Edge>>(g.adj));
+        // var originalGraph = new CoolGraph(new Dictionary<int, List<Edge>>(g.adj));
         // Console.WriteLine(MaxFlow(g, g.GetMaxId()));
         // Console.WriteLine(MaxFlow(g, g.GetMaxId()));
         // Console.WriteLine(g);
-        MaxFlow(g, g.GetMaxId());
-        var marked = FindMarked(g, 0, g.GetMaxId());
+        // MaxFlow(g, g.GetMaxId());
+        // Console.WriteLine(MaxFlow(g, g.GetMaxId()));
+        // var marked = FindMarked(g, 0, g.GetMaxId());
         // foreach (var x in marked) Console.WriteLine(x);
         // Console.WriteLine(g);
-        Console.WriteLine(GetMinCutCapacity(originalGraph, marked));
+        // Console.WriteLine(GetMinCutCapacity(originalGraph, marked));
         // Console.WriteLine(GetMinCutCapacity(originalGraph, marked) / 2); // Divide by two because there is added capacity in both directions
         // Console.WriteLine(g);
+    }
 
+    static void RunWaif()
+    {
+        var g = Waif();
+        Console.WriteLine(MaxFlow(g, g.GetMaxId()));
+    }
 
+    static void RunThore()
+    {
+        var g = Thore();
+        var originalGraph = new CoolGraph(new Dictionary<int, List<Edge>>(g.adj));
+        MaxFlow(g, g.GetMaxId());
+        var marked = FindMarked(g, 0, g.GetMaxId());
+        Console.WriteLine(GetMinCutCapacity(originalGraph, marked, true) / 2); // Divide by two because there is added capacity in both directions
     }
 
     static void RunPaintball()
@@ -35,9 +50,6 @@ public class waif
         MaxFlow(g, g.GetMaxId());
         var marked = FindMarked(g, 0, g.GetMaxId());
         var cap = GetMinCutCapacity(g, marked);
-        var cut = GetMinCut(g, marked);
-        // cut.ForEach(Console.WriteLine);
-        // Console.WriteLine(g);
         var whoShootsWho = new Dictionary<int, int>();
         if (cap != n) Console.WriteLine("Impossible");
         else
@@ -48,7 +60,7 @@ public class waif
                 var e = vertex.Find(x => x.capacity > 0 && x.to < 10000);
                 whoShootsWho.Add(e.to, i);
             }
-            whoShootsWho.ToList().OrderBy(x => x.Key).ToList().ForEach(x => Console.WriteLine(x.Value));
+            whoShootsWho.OrderBy(x => x.Key).ToList().ForEach(x => Console.WriteLine(x.Value));
         }
     }
 
@@ -66,19 +78,19 @@ public class waif
             var line = ReadLine();
             var cap = line[2] == -1 ? int.MaxValue : line[2];
             g.AddEdge(line[0], line[1], cap, true);
-            // g.AddEdge(line[1], line[0], cap, true);
+            g.AddEdge(line[1], line[0], cap, true);
         }
         return g;
     }
 
-    static int GetMinCutCapacity(CoolGraph originalGraph, HashSet<int> marked)
+    static int GetMinCutCapacity(CoolGraph originalGraph, HashSet<int> marked, bool isBidirectional = false)
     {
         var count = 0;
         foreach (var vertex in originalGraph.adj)
         {
             foreach (var edge in vertex.Value)
             {
-                if (marked.Contains(edge.to) && !marked.Contains(edge.from) && !edge.isOriginal) count += edge.capacity;
+                if (marked.Contains(edge.to) && !marked.Contains(edge.from) && (!edge.isOriginal || isBidirectional)) count += edge.capacity;
             }
         }
         return count;
@@ -245,8 +257,8 @@ public class waif
             var toys = lineParts.Skip(1);
             foreach (var toyId in toys)
             {
-                allToys.Add(toyId + 200000);
-                g.AddEdge(i, toyId + 200000, 1);
+                allToys.Add(toyId + 2000000);
+                g.AddEdge(i, toyId + 2000000, 1);
             }
         }
 
@@ -257,10 +269,10 @@ public class waif
             var toyIds = lineParts.Skip(1);
             for (int j = 0; j < toyIds.Count() - 1; j++)
             {
-                allToys.Remove(toyIds.ElementAt(j) + 200000);
-                g.AddEdge(toyIds.ElementAt(j) + 200000, i + 10000, 1);
+                allToys.Remove(toyIds.ElementAt(j) + 2000000);
+                g.AddEdge(toyIds.ElementAt(j) + 2000000, i * -1, 1);
             }
-            g.AddEdge(i + 10000, terminalNode, categoryLimit);
+            g.AddEdge(i * -1, terminalNode, categoryLimit);
         }
 
         foreach (var toy in allToys) // Add toys not in category
@@ -449,4 +461,5 @@ public class waif
             return $"{this.from}=>{this.to} ({this.capacity})";
         }
     }
+
 }
